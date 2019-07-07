@@ -1,12 +1,16 @@
 #  BigID Community Content
-Welcome to the community content repository!
+</br>Welcome to the community content repository!
 Since we want you to fell at home, we have decided to avoid long procedures. However , in order to avoid a mess, some minnal guidelines are requiered...
 
+***
+
 ## Best practices
-**Language** - Although we appreciate any contribution, we preffer Pyhton 3.x
-**Notify content maintainers** - When issuing a pull request, please add an admin **and the original developer of the tool you are changing** as reviewers.
-**Testing **- Test your stuff and provide a README.
-**Packaging** - Dockerize your code,else supply an installation script or installation instructions for all dependencies.
+**Language** - Although we appreciate any contribution, we preffer Pyhton 3.x</br>
+**Notify content maintainers** - When issuing a pull request, please add an admin **and the original developer of the tool you are changing** as reviewers.</br>
+**Testing **- Test your stuff and provide a README.</br>
+**Packaging** - Dockerize your code,else supply an installation script or installation instructions for all dependencies.</br>
+</br></br>
+
 
 ## Naming and Coding Conventions
 - Use snake_case for functions and variable names. 
