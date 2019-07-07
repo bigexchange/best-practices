@@ -1,0 +1,9 @@
+   export BIGID_API_URL=https://bigid-ui/api/v1
+   export BIGID_TASKS_URL=https://bigid-ui/#/task-list
+   export BIGID_API_USER=<the BigID user name>
+   export BIGID_API_PWD=<the BigID user's password>
+   export JIRA_USER=Jira API user Name>
+   export JIRA_API_TOKEN=<Jira API User's API Token>
+   export JIRA_INSTANCE=<Jira instance Name>
+   export JIRA_PROJECT=<Your Jira project name>
+   export SLEEP_TIME=<sleep time in seconds>  e.g. 30
