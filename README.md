@@ -7,7 +7,7 @@ Since we want you to fell at home, we have decided to avoid long procedures. How
 ## Best practices
 **Language** - Although we appreciate any contribution, we preffer Pyhton 3.x</br>
 **Notify content maintainers** - When issuing a pull request, please add an admin **and the original developer** of the tool you are changing  as reviewers.</br>
-**Testing **- Test your stuff and provide a README.</br>
+**Testing** - Test your stuff and provide a README.</br>
 **Packaging** - Dockerize your code,else supply an installation script or installation instructions for all dependencies.</br>
 </br></br>
 
