@@ -15,10 +15,11 @@ Since we want you to fell at home, we have decided to avoid long procedures. How
 ## Naming and Coding Conventions
 - Use snake_case for functions and variable names. 
 - Use SNAKE_CASE for global variables.
-- Catch exceptions.
-In general, try to follow the pep8 style guide (https://www.python.org/dev/peps/pep-0008/)
+- Catch exceptions. 
+</br>In general, try to follow the pep8 style guide (https://www.python.org/dev/peps/pep-0008/)
 
-
+</br>
+**In case you would like to contribute, please contact tals@bigid.com and we will grant you with collaborator permissions.**</br></br></br>
 
 
 ## Have fun!
