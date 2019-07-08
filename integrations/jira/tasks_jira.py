@@ -12,17 +12,16 @@ from jira import JIRA
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-last_run_time = os.environ['LAST_RUN_TIME']
-bigid_api_user = os.environ['BIGID_API_USER']
-bigid_api_pwd = os.environ['BIGID_API_PWD']
-bigid_api_url = os.environ['BIGID_API_URL']
-bigid_tasks_url = os.environ['BIGID_TASKS_URL']
-jira_user = os.environ['JIRA_USER']
-jira_api_token = os.environ['JIRA_API_TOKEN']
-jira_project = os.environ['JIRA_PROJECT']
-jira_instance = ('https://' + os.environ['JIRA_INSTANCE'] +
+LAST_RUN_TIME = os.environ['LAST_RUN_TIME']
+BIGID_API_USER = os.environ['BIGID_API_USER']
+BIGID_API_PWD = os.environ['BIGID_API_PWD']
+BIGID_API_URL = os.environ['BIGID_API_URL']
+BIGID_TASKS_URL = os.environ['BIGID_TASKS_URL']
+JIRA_USER = os.environ['JIRA_USER']
+JIRA_API_TOKEN = os.environ['JIRA_API_TOKEN']
+JIRA_PROJECT = os.environ['JIRA_PROJECT']
+JIRA_INSTANCE = ('https://' + os.environ['JIRA_INSTANCE'] +
                  '.atlassian.net')
-# snGroup = os.environ['SN_GROUP']
 
 
 def get_sub_category(taskType):
@@ -43,26 +42,29 @@ def get_sub_category(taskType):
 def get_bigid_token():
     """Get an access token from BigID."""
     print("Getting access token from BigID")
-    url = bigid_api_url+'/sessions'
+    url = BIGID_API_URL+'/sessions'
     headers = {"Accept": "application/json"}
-    data = {"username": bigid_api_user, "password": bigid_api_pwd}
+    data = {"username": BIGID_API_USER, "password": BIGID_API_PWD}
 
     # Do the HTTP request
-    response = requests.post(
-                            url, data=data, headers=headers, verify=False)
-    print('Status:', response.status_code)
-    if response.status_code != 200:
-            print('Status:', response.status_code, 'Headers:',
-                  response.headers, 'Response:', response.json())
-            print('Cookies', response.cookies)
-            sys.exit(1)
-    data = response.json()
-    return (data["auth_token"])
+    try:
+        response = requests.post(
+                                url, data=data, headers=headers, verify=False)
+        print('Status:', response.status_code)
+        if response.status_code != 200:
+                print('Status:', response.status_code, 'Headers:',
+                      response.headers, 'Response:', response.json())
+                print('Cookies', response.cookies)
+        else:
+            data = response.json()
+            return (data["auth_token"])
+    except Exception:
+        print("Something went wrong. Is BigID up?", sys.exc_info())
 
 
 def close_bigid_task(bigid_token, task_id):
     """Resolve task."""
-    url = bigid_api_url + '/tasks/' + task_id
+    url = BIGID_API_URL + '/tasks/' + task_id
     # print(url)
     headers = {
         "Accept": "application/json",
@@ -73,100 +75,95 @@ def close_bigid_task(bigid_token, task_id):
 
 
     # Do the HTTP request
-    response = requests.put(
-        url, data=json.dumps(payload), headers=headers, verify=False)
-    # Check for HTTP codes other than 200
-    if response.status_code != 200:
-            print('Status:', response.status_code, "Operation failed!")
-            exit()
-    else:
-            print(response.status_code, "Task closed!")
+    try:
+        response = requests.put(
+            url, data=json.dumps(payload), headers=headers, verify=False)
+        # Check for HTTP codes other than 200
+        if response.status_code != 200:
+                print('Status:', response.status_code, "Operation failed!")
+        else:
+                print(response.status_code, "Task closed!")
+    except Exception:
+        print("Something went wrong. Is BigID up?", sys.exc_info())
 
 
 def get_tickets(bigid_token):
     """Get closed tickets from Jira ."""
     print("Checking for tasks to close")
-    auth = HTTPBasicAuth(jira_user, jira_api_token)
-    url = (jira_instance + '/rest/api/3/search?jql=project = ' + jira_project +
+    auth = HTTPBasicAuth(JIRA_USER, JIRA_API_TOKEN)
+    url = (JIRA_INSTANCE + '/rest/api/3/search?jql=project = ' + JIRA_PROJECT +
            ' AND issuetype = "Service Request" ' +
            'AND summary ~ "%BigID_Task%" ')
     # print(url)
-    auth = HTTPBasicAuth(jira_user, jira_api_token)
+    auth = HTTPBasicAuth(JIRA_USER, JIRA_API_TOKEN)
     headers = {"Accept": "application/json"}
 
-    response = requests.request("GET", url, auth=auth, headers=headers)
-    if response.status_code != 200:
-        print('Status:', response.status_code,
-              'Headers:', response.headers, 'Error Response:', response.json())
-        exit()
-    data = (response.json())
-    lastRun = datetime.strptime(last_run_time, '%Y-%m-%dT%H:%M:%S.%fZ')
-    lastRunutc = lastRun.replace(tzinfo=timezone('UTC'))
-    for x in data["issues"]:
-        ticketId = x['key']
-        resolutionDate = x['fields']['resolutiondate']
-        if resolutionDate is not None:
-            resolutionDate = dateutil.parser.parse(resolutionDate)
-            seconds_elapsed = (resolutionDate-lastRunutc).total_seconds()
-            if seconds_elapsed >= 0:
-                task_id = x['fields']['summary'].split("|")[1][:-1]
-                print(ticketId + ' ' + task_id + ' ' + str(seconds_elapsed))
-                close_bigid_task(bigid_token, task_id)
-
-
-def jira_healthcheck():
-    """HealthCheck."""
-    print("Checking connection to Jira")
-    auth = HTTPBasicAuth(jira_user, jira_api_token)
-    url = jira_instance + '/status'
-
-    headers = {"Accept": "application/json"}
-
-    response = requests.request("GET", url, auth=auth, headers=headers)
-
-    print('Status:', response.status_code)
-    if response.status_code != 200:
-        sys.exit(2)
+    try:
+        response = requests.request("GET", url, auth=auth, headers=headers)
+        if response.status_code != 200:
+            print('Status:', response.status_code,
+                  'Headers:', response.headers, 'Error Response:',
+                  response.json())
+        else:
+            data = (response.json())
+            lastRun = datetime.strptime(LAST_RUN_TIME, '%Y-%m-%dT%H:%M:%S.%fZ')
+            lastRunutc = lastRun.replace(tzinfo=timezone('UTC'))
+            for x in data["issues"]:
+                ticketId = x['key']
+                resolutionDate = x['fields']['resolutiondate']
+                if resolutionDate is not None:
+                    resolutionDate = dateutil.parser.parse(resolutionDate)
+                    seconds_elapsed = (resolutionDate-lastRunutc).total_seconds()
+                    if seconds_elapsed >= 0:
+                        task_id = x['fields']['summary'].split("|")[1][:-1]
+                        print(ticketId + ' ' + task_id + ' ' +
+                              str(seconds_elapsed))
+                        close_bigid_task(bigid_token, task_id)
+    except Exception:
+        print("Something went wrong.", sys.exc_info())
 
 
 def find_user_by_mail(assigned_to):
     """Find Jira user by email."""
-    url = jira_instance + "/rest/api/3/user/search?username=" + assigned_to
-    auth = HTTPBasicAuth(jira_user, jira_api_token)
+    url = JIRA_INSTANCE + "/rest/api/3/user/search?username=" + assigned_to
+    auth = HTTPBasicAuth(JIRA_USER, JIRA_API_TOKEN)
     headers = {"Accept": "application/json"}
+    try:
+        response = requests.request("GET", url, auth=auth, headers=headers)
+        print('Status:', response.status_code)
 
-    response = requests.request("GET", url, auth=auth, headers=headers)
-    print('Status:', response.status_code)
+        if response.status_code != 200:
+            print('Status:', response.status_code,
+                  'Headers:', response.headers, 'Error Response:',
+                  response.json())
+        else:
+            data = (response.json())
+            username = ""
+            for val in data:
+                username = val["name"]
+            return username
 
-    if response.status_code != 200:
-        print('Status:', response.status_code,
-              'Headers:', response.headers, 'Error Response:', response.json())
-        exit()
-
-    data = (response.json())
-    username = ""
-    for val in data:
-        username = val["name"]
-    return username
+    except Exception:
+        print("Cannot reach Jira", sys.exc_info())
 
 
 def create_jira_ticket(subject, description, subCategory, task_id, assigned_to):
     """Create a JIRA ticket with task details."""
     print("Creating Ticket for task_id: " + task_id)
-    note = ("\n" + 'View in ' + bigid_tasks_url + '/' + task_id +
+    note = ("\n" + 'View in ' + BIGID_TASKS_URL + '/' + task_id +
             ' for more details')
     assignee = find_user_by_mail(assigned_to)
     print("assignee: " + assignee)
-    # jac = JIRA(jira_instance)
-    options = {'server': jira_instance}
-    jira = JIRA(options, basic_auth=(jira_user, jira_api_token))
+    # jac = JIRA(JIRA_INSTANCE)
+    options = {'server': JIRA_INSTANCE}
+    jira = JIRA(options, basic_auth=(JIRA_USER, JIRA_API_TOKEN))
 
     description = ("Category: " + subCategory + "\n" +
                    "Description: " + description + "\n\n\n" + note)
     if assignee != "":
-            assignee = find_user_by_mail(jira_user)
+            assignee = find_user_by_mail(JIRA_USER)
     issue_dict = {
-       'project': jira_project,
+       'project': JIRA_PROJECT,
        'summary': subject + "  (BigID_Task|" + task_id+")",
        'description': description,
        'issuetype': {'name': 'Service Request'},
@@ -178,54 +175,53 @@ def create_jira_ticket(subject, description, subCategory, task_id, assigned_to):
 
 def main():
     """Flow starts here."""
-    print("Performing healthcheck")
     bigid_token = get_bigid_token()
-    jira_healthcheck()
 
     print("Checking for tickets to open")
-    url = bigid_api_url+'/tasks?status=open&role=admin'
-    # print(url)
+    url = BIGID_API_URL+'/tasks?status=open&role=admin'
     headers = {
             "Accept": "application/json;charset=utf-8",
             "Content-Type": "application/json",
             "x-access-token": bigid_token
     }
-    response = requests.get(
-                            url, headers=headers, verify=False)
-    # Check for HTTP codes other than 200
-    if response.status_code != 200:
-            print('Status:', response.status_code, 'Headers:',
-                  response.headers, 'Response:', response.json())
-            print('Cookies', response.cookies)
-            exit()
-    data = json.loads(json.dumps(response.json()))
 
-    lastRun = dateutil.parser.parse(str(last_run_time))
-    lastRun = lastRun.replace(tzinfo=None)
-    # compensate for lost tasks\tickets, or make system scan history
-    # lastRun = lastRun - timedelta(0, 10)
+    try:
+        response = requests.get(
+                                url, headers=headers, verify=False)
+        # Check for HTTP codes other than 200
+        if response.status_code != 200:
+                print('Status:', response.status_code, 'Headers:',
+                      response.headers, 'Response:', response.json())
+                print('Cookies', response.cookies)
+        else:
+            data = json.loads(json.dumps(response.json()))
 
-    description = ""
-    for entry in data:
-        creation_date = entry['created_at']
-        if creation_date is not None:
-            creation_date = datetime.strptime(creation_date,
-                                              '%Y-%m-%dT%H:%M:%S.%fZ')
-            if creation_date >= lastRun:
-                task_id = entry['_id']
-                subCategory = get_sub_category(entry['type'])
-                assigned_to = entry['owner']
-                subject = entry['subject']
-                for key, val in entry.items():
-                    if 'comments' in key:
-                        for attr, value in val[0].items():
-                            if 'text' in attr:
-                                description = value
+            lastRun = dateutil.parser.parse(str(LAST_RUN_TIME))
+            lastRun = lastRun.replace(tzinfo=None)
+            description = ""
+            for entry in data:
+                creation_date = entry['created_at']
+                if creation_date is not None:
+                    creation_date = datetime.strptime(creation_date,
+                                                      '%Y-%m-%dT%H:%M:%S.%fZ')
+                    if creation_date >= lastRun:
+                        task_id = entry['_id']
+                        subCategory = get_sub_category(entry['type'])
+                        assigned_to = entry['owner']
+                        subject = entry['subject']
+                        for key, val in entry.items():
+                            if 'comments' in key:
+                                for attr, value in val[0].items():
+                                    if 'text' in attr:
+                                        description = value
 
-                create_jira_ticket(subject, description, subCategory,
-                             task_id, assigned_to)
+                        create_jira_ticket(subject, description, subCategory,
+                                           task_id, assigned_to)
 
-    get_tickets(bigid_token)
+        get_tickets(bigid_token)
+
+    except Exception:
+        print("Cannot reach BigID", sys.exc_info())
 
 
 if __name__ == '__main__':

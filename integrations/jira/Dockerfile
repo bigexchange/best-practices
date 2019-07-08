@@ -1,10 +1,15 @@
 FROM python:3.6.7
-RUN apt-get update -y
-RUN apt-get install vim curl -y
-RUN pip3 install --upgrade setuptools
-RUN pip3 install xmltodict requests requests_oauthlib requests-oauth2 pytz python-dateutil jira
-RUN mkdir -p /opt/bigid/tasks_to_jira
+LABEL maintainer="tals@bigid.com"
+RUN apt-get update -y \
+    && apt-get install vim curl sudo -y
+RUN pip3 install --upgrade pip setuptools xmltodict requests requests_oauthlib requests-oauth2 pytz python-dateutil jira \
+    && mkdir -p /opt/bigid/tasks_to_jira
 WORKDIR /opt/bigid/tasks_to_jira
-COPY tasks_jira.py /opt/bigid/tasks_to_jira/tasks_jira.py
-COPY tasks_to_tickets_p3.sh /opt/bigid/tasks_to_jira/tasks_to_tickets_p3.sh
-CMD ["/opt/bigid/tasks_to_jira/tasks_to_tickets_p3.sh"]
+COPY tasks_jira.py tasks_to_tickets_p3.sh ./
+RUN useradd -u 2006 bigid \
+    && echo "bigid ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/bigid \
+    && chmod 0440 /etc/sudoers.d/bigid \
+    && chown -R bigid:bigid /opt/bigid
+USER bigid
+ENV PATH /opt/bigid/tasks_to_jira:$PATH
+CMD ["tasks_to_tickets_p3.sh"]
