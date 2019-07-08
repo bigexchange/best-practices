@@ -1,0 +1,9 @@
+   export BIGID_API_URL=https://bigid-ui/api/v1
+   export BIGID_TASKS_URL=https://bigid-ui/#/task-list
+   export BIGID_API_USER=<the BigID user>
+   export BIGID_API_PWD=<the BigID user's password>
+   export SN_USER=<Service Now API user Name>
+   export SN_PWD=<Service Now API User's password>
+   export SN_INSTANCE=<Service Now instance Name>
+   export SN_GROUP=<default assginment group> e.g. Software
+   export SLEEP_TIME=<sleep time in seconds>  e.g. 30
