@@ -1,1 +1,1 @@
-## Developing Custum Connectors
+## Developing Custom Connectors
