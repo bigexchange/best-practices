@@ -6,20 +6,20 @@ import requests
 import subprocess
 import csv
 
-bigidApiUrl = os.environ['DISCOVERER_BIGID_API_URL']
-bigidPwd = os.environ['DISCOVERER_BIGID_PWD']
-dsUrl = bigidApiUrl+'/ds_connections'
-credsUrl = bigidApiUrl+'/credentials'
-createCreds = 1
-file = 'discovery.csv'
+BIGID_API_URL = os.environ['DISCOVERER_BIGID_API_URL']
+BIGID_API_PASSWORD = os.environ['DISCOVERER_BIGID_PWD']
+DS_URL = BIGID_API_URL+'/ds_connections'
+CREDS_URL = BIGID_API_URL+'/credentials'
+# CREATE_CREDS = 1
+DS_FILE = 'discovery.csv'
 # e.g. https://localhost/api/v1
 
 
 def get_bigid_token():
     """Get an access token from BigID."""
-    url = bigidApiUrl+'/sessions'
+    url = BIGID_API_URL+'/sessions'
     headers = {"Accept": "application/json"}
-    data = {"username": "bigid", "password": bigidPwd}
+    data = {"username": "bigid", "password": BIGID_API_PASSWORD}
 
     # Do the HTTP request
     response = requests.post(
@@ -129,7 +129,7 @@ def get_json_data(service, row, sharedResource):
 def csv_processor(token):
     """Process scan results and perform imports."""
     print("preparing scan results for import...")
-    with open(file, mode='r') as csv_file:
+    with open(DS_FILE, mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         line_count = 0
         for row in csv_reader:
@@ -141,7 +141,7 @@ def csv_processor(token):
             data = get_json_data(type, row, sharedResource)
             if str(data) != "None":
                 print('\n' + data)
-                create_obj(data, token, dsUrl)
+                create_obj(data, token, DS_URL)
             line_count += 1
 
 
@@ -157,10 +157,11 @@ def create_obj(data, token, url):
         print ("data is None")
 
 
+'''
 def get_bigid_data(url, bigid_token):
     """Get data from BigID."""
     headers = {"Accept": "application/json", "x-access-token": bigid_token}
-    response = requests.get(url, auth=('admin', bigidPwd),
+    response = requests.get(url, auth=('admin', BIGID_API_PASSWORD),
                             headers=headers, verify=False)
 
     # Check for HTTP codes other than 200
@@ -171,6 +172,7 @@ def get_bigid_data(url, bigid_token):
 
     data = json.loads(json.dumps(response.json()))
     return data
+'''
 
 
 def main():
@@ -181,7 +183,7 @@ def main():
                  "smb", "nfs", "mongodb"):
         credsData = ('{"credential_id":"' + type + '","username": "' +
                      type + '-admin","password":"123456"}')
-        create_obj(credsData, bigid_token, credsUrl)
+        create_obj(credsData, bigid_token, CREDS_URL)
     csv_processor(bigid_token)
     print('\nDone. please check BigID for data source names ' +
           'which start with "auto-discovered"')

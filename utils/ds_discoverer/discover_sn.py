@@ -1,36 +1,35 @@
-# import DataSources from ServiceNow
 """Imports Data Sources from Service Now."""
 import requests
 import json
 import os
+import sys
 import subprocess
 from requests_oauth2 import OAuth2BearerToken
 
 
-servicenowUser = os.environ['DISCOVERER_SN_USER']  # 'admin'
-servicenowPwd = os.environ['DISCOVERER_SN_PWD']  # 'Ts@...'
-servicenowClientId = os.environ['DISCOVERER_SN_CLIENT_ID']
-# '4e1239168f222300171e1ac6f4abfd56'
-servicenowClientSecret = os.environ['DISCOVERER_SN_CLIENT_SECRET']  # 'Ts@...'
-servicenowInstance = os.environ['DISCOVERER_SN_INSTANCE']
-ServiceNowAuthType = os.environ['DISCOVERER_SN_AUTH_TYPE']
+SN_USER = os.environ['DISCOVERER_SN_USER']  # 'admin'
+SN_PWD = os.environ['DISCOVERER_SN_PWD']  # 'Ts@...'
+SN_CLIENT_ID = os.environ['DISCOVERER_SN_CLIENT_ID']
+SN_CLIENT_SECRET = os.environ['DISCOVERER_SN_CLIENT_SECRET']  # 'Ts@...'
+SN_INSTANCE = os.environ['DISCOVERER_SN_INSTANCE']
+SN_AUTH_TYPE = os.environ['DISCOVERER_SN_AUTH_TYPE']
 
-bigidPwd = os.environ['DISCOVERER_BIGID_PWD']
-bigidApiUrl = os.environ['DISCOVERER_BIGID_API_URL']
-dsUrl = bigidApiUrl+'/ds_connections'
-credsUrl = bigidApiUrl+'/credentials'
-snApiUrl = 'https://' + servicenowInstance + '.service-now.com/api'
+BIGID_PWD = os.environ['DISCOVERER_BIGID_PWD']
+BIGID_API_URL = os.environ['DISCOVERER_BIGID_API_URL']
+DS_URL = BIGID_API_URL+'/ds_connections'
+CREDS_URL = BIGID_API_URL+'/credentials'
+SN_API_URL = 'https://' + SN_INSTANCE + '.service-now.com/api'
 
 
 def get_sn_bToken():
     """Get an oAuth2 access_token from Service Now."""
-    url = 'https://' + servicenowInstance + '.service-now.com/oauth_token.do'
+    url = 'https://' + SN_INSTANCE + '.service-now.com/oauth_token.do'
     post_data = {
            'grant_type': 'password',
-           'username': servicenowUser,
-           'password': servicenowPwd,
-           'client_id': servicenowClientId,
-           'client_secret': servicenowClientSecret
+           'username': SN_USER,
+           'password': SN_PWD,
+           'client_id': SN_CLIENT_ID,
+           'client_secret': SN_CLIENT_SECRET
     }
 
     response = requests.post(
@@ -38,12 +37,17 @@ def get_sn_bToken():
            data=post_data
     )
     # Check for HTTP codes other than 200
-    if response.status_code != 200:
-            print('Status:', response.status_code, 'Headers:',
-                  response.headers, 'Response:', response.json())
-            print('Cookies', response.cookies)
-    bToken = (response.json()["access_token"])
-    return bToken
+    try:
+        if response.status_code != 200:
+                print('Status:', response.status_code, 'Headers:',
+                      response.headers, 'Response:', response.json())
+                print('Cookies', response.cookies)
+        else:
+            bToken = (response.json()["access_token"])
+            return bToken
+    except Exception:
+        print("Something went wrong. Are youy connected to the internet?",
+              sys.exc_info())
 
 
 def create_obj(data, token, url):
@@ -57,7 +61,7 @@ def create_obj(data, token, url):
 
 def get_sn_config_items(url, token):
     """Get ci's from ServiceNow."""
-    if ServiceNowAuthType == 'oAuth2':
+    if SN_AUTH_TYPE == 'oAuth2':
         with requests.Session() as s:
             s.auth = OAuth2BearerToken(token)
             response = s.get(url)
@@ -67,36 +71,40 @@ def get_sn_config_items(url, token):
         headers = {"Accept": "application/json"}
 
         # Do the HTTP request
-        response = requests.get(url, auth=(servicenowUser, servicenowPwd),
+        response = requests.get(url, auth=(SN_USER, SN_PWD),
                                 headers=headers)
 
     # Check for HTTP codes other than 200
-    if response.status_code != 200:
-            print('Status:', response.status_code, 'Headers:',
-                  response.headers, 'Response:', response.json())
-            print('Cookies', response.cookies)
-
-    data = json.loads(json.dumps(response.json()))
-    return data
+    try:
+        if response.status_code != 200:
+                print('Status:', response.status_code, 'Headers:',
+                      response.headers, 'Response:', response.json())
+                print('Cookies', response.cookies)
+        else:
+            data = json.loads(json.dumps(response.json()))
+            return data
+    except Exception:
+        print("Something went wrong. Are youy connected to the internet?",
+              sys.exc_info())
 
 
 def get_bigid_token():
     """Get an access token from BigID."""
-    url = bigidApiUrl+'/sessions'
+    url = BIGID_API_URL+'/sessions'
     headers = {"Accept": "application/json"}
-    data = {"username": "bigid", "password": bigidPwd}
+    data = {"username": "bigid", "password": BIGID_PWD}
 
-    # Do the HTTP request
-    response = requests.post(
-                            url, data=data, headers=headers, verify=False)
-    # Check for HTTP codes other than 200
-    if response.status_code != 200:
-            print('Status:', response.status_code, 'Headers:',
-                  response.headers, 'Response:', response.json())
-            print('Cookies', response.cookies)
-
-    data = json.loads(json.dumps(response.json()))
-    return (data["auth_token"])
+    try:
+        response = requests.post(url, data=data, headers=headers, verify=False)
+        if response.status_code != 200:
+                print('Status:', response.status_code, 'Headers:',
+                      response.headers, 'Response:', response.json())
+                print('Cookies', response.cookies)
+        else:
+            data = json.loads(json.dumps(response.json()))
+            return (data["auth_token"])
+    except Exception:
+        print("Something went wrong. is BigID up?", sys.exc_info())
 
 
 def parse_share_data(data, token):
@@ -126,8 +134,7 @@ def parse_share_data(data, token):
     return computerName, computerIp, shareName
 
 
-def get_json_data(service, address, port, name,
-                  operational_status):
+def get_json_data(service, address, port, name, operational_status):
     """Get data by CI Type.Currently has MySQL,Postgress,Oracle,DB2."""
     """I need an ms sql entry example in ServiceNow."""
     if port != "":
@@ -220,7 +227,7 @@ def main():
     """Doc."""
     sn_token = get_sn_bToken()
     bigid_token = get_bigid_token()
-    data = get_sn_config_items(snApiUrl + '/now/table/cmdb_ci_database',
+    data = get_sn_config_items(SN_API_URL + '/now/table/cmdb_ci_database',
                                sn_token)
     # print(data)
     # print(data["result"][0]["operational_status"])
@@ -249,30 +256,30 @@ def main():
                 post_data = get_json_data(type, address, port, name,
                                           operational_status)
                 # print(post_data)
-                create_obj(post_data, bigid_token, dsUrl)
+                create_obj(post_data, bigid_token, DS_URL)
             else:
                 print("DS: " + name + " will not be imported - " +
                       "Insufficient data in CI record")
     # get smb shares
-    data = get_sn_config_items(snApiUrl + '/now/table/cmdb_ci_file_system_smb',
+    data = get_sn_config_items(SN_API_URL + '/now/table/cmdb_ci_file_system_smb',
                                sn_token)
     for entry in data["result"]:
         computerName, computerIp, shareName = parse_share_data(entry, sn_token)
         if computerName != "None":
             post_data = get_shares_json_data("smb", computerName + "_" +
                                              shareName, computerIp, shareName)
-            create_obj(post_data, bigid_token, dsUrl)
+            create_obj(post_data, bigid_token, DS_URL)
     # print(computerName)
 
     # get nfs shares
-    data = get_sn_config_items(snApiUrl + '/now/table/cmdb_ci_file_system_nfs',
+    data = get_sn_config_items(SN_API_URL + '/now/table/cmdb_ci_file_system_nfs',
                                sn_token)
     for entry in data["result"]:
         computerName, computerIp, shareName = parse_share_data(entry, sn_token)
         if computerName != "None":
             post_data = get_shares_json_data(
                 "nfs", computerName + "_" + shareName, computerIp, shareName)
-            create_obj(post_data, bigid_token, dsUrl)
+            create_obj(post_data, bigid_token, DS_URL)
     # print(computerName)
 
 
