@@ -14,16 +14,16 @@ Since we want you to fell at home, we have decided to avoid long procedures. How
 
 
 ## Naming and Coding Conventions
-- Use snake_case for functions and variable names.
+- Use snake_case for functions and variable names:
+```python
+creation_date = entry['created_at']
 ```
-url = BIGID_API_URL + '/tasks/' + task_id
-```
-- Use SNAKE_CASE for global variables.
-```
+- Use SNAKE_CASE for global variables:
+```python
 BIGID_API_USER = os.environ['BIGID_API_USER']
 ```
-- Catch exceptions.
-```
+- Catch exceptions:
+```python
 try:
     response = requests.put(
         url, data=json.dumps(payload), headers=headers, verify=False)
