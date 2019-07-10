@@ -4,7 +4,7 @@ Since we want you to feel at home, we have decided to avoid long procedures. How
 
 ***
 
-## Best practices
+## Best Practices
 **Secrets** - Do not push secrets. Pay attention that secrets are still available in git log, no matter if you deleted them in a later commit.</br>
 **Language** - Although we appreciate any contribution, we prefer Python 3.x</br>
 **Notify content maintainers** - When issuing a pull request, please add an admin **and the original developer** of the tool you are changing  as reviewers.</br>
@@ -39,7 +39,7 @@ except Exception:
 </br>In general, try to follow the pep8 style guide (https://www.python.org/dev/peps/pep-0008/)
 
 </br></br>
-## Docker best practices
+## Docker Best Practices
 Add a build script with proper tagging:
 ```docker
 docker build -t tals/tasks2jira:1.0.0 .
