@@ -4,8 +4,8 @@ import subprocess
 from xml.dom import minidom
 import csv
 
-ip_range = os.environ['DISCOVERER_IP_RANGE']
-scanType = os.environ['DISCOVERER_SCAN_TYPE']
+IP_RANGE = os.environ['DISCOVERER_IP_RANGE']
+SCAN_TYPE = os.environ['DISCOVERER_SCAN_TYPE']
 # e.g. https://localhost/api/v1
 
 
@@ -33,19 +33,19 @@ def create_row(name, address, type, sharedResource):
                                    sharedResource])
 
 
-def scan_cmd(scanType):
+def scan_cmd(SCAN_TYPE):
     """Get the scan command for each scan type."""
     scanDict = {
       "rdb": subprocess.run(["nmap", "-p", "T:1433-1433,T:3306,T:5432,T:1521",
-                             "-sV", ip_range, "--open",
+                             "-sV", IP_RANGE, "--open",
                              "-oX", "nmap_output.xml"]),
       "smb": subprocess.run(["nmap", "-sS", "--script", "smb-enum-shares.nse",
-                             "-p", "T:139, T:445", ip_range, "--open",
+                             "-p", "T:139, T:445", IP_RANGE, "--open",
                              "-oX", "nmap_output.xml"]),
-      "nfs": subprocess.run(["nmap", "-p", "T:2049", ip_range, "--open", "-oX",
+      "nfs": subprocess.run(["nmap", "-p", "T:2049", IP_RANGE, "--open", "-oX",
                              "nmap_output.xml"]),
     }
-    data = str(scanDict.get(scanType))
+    data = str(scanDict.get(SCAN_TYPE))
     return data
 
 
@@ -81,7 +81,7 @@ def xml_processor(file):
         if name != "None":
             create_row(name, address, type, "")
         if tables != []:
-            if scanType == "smb" or scanType == "meta":
+            if SCAN_TYPE == "smb" or SCAN_TYPE == "meta":
                     if name is not None:
                         print("name:" + name)
                         for table in tables:
@@ -128,7 +128,7 @@ def meta_scan(file):
         """Run a scan on all ports."""
         # scans are splitted in order to optimize performance.
         print("\nscanning all ports for all services")
-        subprocess.run(["nmap", "-p-", ip_range, "-sV", "--open", "-oX", file])
+        subprocess.run(["nmap", "-p-", IP_RANGE, "-sV", "--open", "-oX", file])
         xml_processor(file)
         print("\nscanning smb with open shares discovery")
         file = "smb_output.xml"
@@ -144,25 +144,25 @@ def meta_scan(file):
 def rdb_scan(file):
     """RDB Scan command."""
     subprocess.run(["nmap", "-p", "T:1433-1433,T:3306,T:5432,T:1521",
-                    "-sV", ip_range, "--open", "-oX", file])
+                    "-sV", IP_RANGE, "--open", "-oX", file])
 
 
 def smb_scan(file):
     """SMB Scan command."""
     subprocess.run(["nmap", "-sS", "--script",
                     "smb-enum-shares.nse",
-                    "-p", "T:139, T:445", ip_range, "--open",
+                    "-p", "T:139, T:445", IP_RANGE, "--open",
                     "-oX", file])
 
 
 def nfs_scan(file):
     """NFS Scan command."""
-    subprocess.run(["nmap", "-p", "T:2049", ip_range, "--open", "-oX", file])
+    subprocess.run(["nmap", "-p", "T:2049", IP_RANGE, "--open", "-oX", file])
 
 
 def main():
     """Flow starts here."""
-    file = scanType + "_output.xml"
+    file = SCAN_TYPE + "_output.xml"
 
     with open('discovery.csv', mode='w') as discovery_file:
         discovery_writer = csv.writer(discovery_file, delimiter=',',
@@ -176,17 +176,17 @@ def main():
                                    'differential', 'is_credential',
                                    'sharedResource'])
 
-    if scanType != 'meta':
+    if SCAN_TYPE != 'meta':
         scanDict = {
           # Get scan function by scan type.
           "rdb": "rdb_scan(file)",
           "smb": "smb_scan(file)",
           "nfs": "nfs_scan(file)"
         }
-        print("Starting " + scanType + " scan." +
+        print("Starting " + SCAN_TYPE + " scan." +
               " Results will be saved to nmap_output.xml")
         # Execute scan.
-        exec(scanDict.get(scanType))
+        exec(scanDict.get(SCAN_TYPE))
         print(file)
 
         xml_processor(file)
