@@ -1,3 +1,4 @@
+"""Create Jira incidents for BigID tasks."""
 import json
 import os
 import sys
@@ -24,7 +25,7 @@ JIRA_INSTANCE = ('https://' + os.environ['JIRA_INSTANCE'] +
                  '.atlassian.net')
 
 
-def get_sub_category(taskType):
+def get_sub_category(task_type):
     """Translate Task type to Service Now category."""
     categoryDict = {
       "delete-user-task": "Deletion of an Individual",
@@ -35,7 +36,7 @@ def get_sub_category(taskType):
       "attributeWithoutPurpose": "New Attribute Found",
       "serviceDown": "Service Down"
     }
-    data = str(categoryDict.get(taskType))
+    data = str(categoryDict.get(task_type))
     return data
 
 
@@ -65,14 +66,12 @@ def get_bigid_token():
 def close_bigid_task(bigid_token, task_id):
     """Resolve task."""
     url = BIGID_API_URL + '/tasks/' + task_id
-    # print(url)
     headers = {
         "Accept": "application/json",
         "authorization": bigid_token,
         "Content-Type": "application/json"
         }
     payload = {"status": "resolved"}
-
 
     # Do the HTTP request
     try:
@@ -94,8 +93,6 @@ def get_tickets(bigid_token):
     url = (JIRA_INSTANCE + '/rest/api/3/search?jql=project = ' + JIRA_PROJECT +
            ' AND issuetype = "Service Request" ' +
            'AND summary ~ "%BigID_Task%" ')
-    # print(url)
-    auth = HTTPBasicAuth(JIRA_USER, JIRA_API_TOKEN)
     headers = {"Accept": "application/json"}
 
     try:
@@ -106,14 +103,15 @@ def get_tickets(bigid_token):
                   response.json())
         else:
             data = (response.json())
-            lastRun = datetime.strptime(LAST_RUN_TIME, '%Y-%m-%dT%H:%M:%S.%fZ')
-            lastRunutc = lastRun.replace(tzinfo=timezone('UTC'))
+            last_run = datetime.strptime(LAST_RUN_TIME,
+                                         '%Y-%m-%dT%H:%M:%S.%fZ')
+            last_run_utc = last_run.replace(tzinfo=timezone('UTC'))
             for x in data["issues"]:
                 ticketId = x['key']
                 resolutionDate = x['fields']['resolutiondate']
                 if resolutionDate is not None:
                     resolutionDate = dateutil.parser.parse(resolutionDate)
-                    seconds_elapsed = (resolutionDate-lastRunutc).total_seconds()
+                    seconds_elapsed = (resolutionDate-last_run_utc).total_seconds()
                     if seconds_elapsed >= 0:
                         task_id = x['fields']['summary'].split("|")[1][:-1]
                         print(ticketId + ' ' + task_id + ' ' +
@@ -147,7 +145,8 @@ def find_user_by_mail(assigned_to):
         print("Cannot reach Jira", sys.exc_info())
 
 
-def create_jira_ticket(subject, description, subCategory, task_id, assigned_to):
+def create_jira_ticket(subject, description, sub_category,
+                       task_id, assigned_to):
     """Create a JIRA ticket with task details."""
     print("Creating Ticket for task_id: " + task_id)
     note = ("\n" + 'View in ' + BIGID_TASKS_URL + '/' + task_id +
@@ -158,7 +157,7 @@ def create_jira_ticket(subject, description, subCategory, task_id, assigned_to):
     options = {'server': JIRA_INSTANCE}
     jira = JIRA(options, basic_auth=(JIRA_USER, JIRA_API_TOKEN))
 
-    description = ("Category: " + subCategory + "\n" +
+    description = ("Category: " + sub_category + "\n" +
                    "Description: " + description + "\n\n\n" + note)
     if assignee != "":
             assignee = find_user_by_mail(JIRA_USER)
@@ -196,17 +195,17 @@ def main():
         else:
             data = json.loads(json.dumps(response.json()))
 
-            lastRun = dateutil.parser.parse(str(LAST_RUN_TIME))
-            lastRun = lastRun.replace(tzinfo=None)
+            last_run = dateutil.parser.parse(str(LAST_RUN_TIME))
+            last_run = last_run.replace(tzinfo=None)
             description = ""
             for entry in data:
                 creation_date = entry['created_at']
                 if creation_date is not None:
                     creation_date = datetime.strptime(creation_date,
                                                       '%Y-%m-%dT%H:%M:%S.%fZ')
-                    if creation_date >= lastRun:
+                    if creation_date >= last_run:
                         task_id = entry['_id']
-                        subCategory = get_sub_category(entry['type'])
+                        sub_category = get_sub_category(entry['type'])
                         assigned_to = entry['owner']
                         subject = entry['subject']
                         for key, val in entry.items():
@@ -215,7 +214,7 @@ def main():
                                     if 'text' in attr:
                                         description = value
 
-                        create_jira_ticket(subject, description, subCategory,
+                        create_jira_ticket(subject, description, sub_category,
                                            task_id, assigned_to)
 
         get_tickets(bigid_token)
