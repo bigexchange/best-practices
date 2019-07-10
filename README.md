@@ -1,12 +1,12 @@
 #  BigID Community Content
 </br>Welcome to the community content repository!
-Since we want you to fell at home, we have decided to avoid long procedures. However , in order to avoid a mess, some minnal guidelines are requiered...
+Since we want you to feel at home, we have decided to avoid long procedures. However, in order to avoid a mess, some mininal guidelines are required...
 
 ***
 
 ## Best practices
-**Secrets** - Do not push secrets. Pay attention that secrets are still availeable in git log, no matter if you deleted them in a later commit.</br>
-**Language** - Although we appreciate any contribution, we prefer Pyhton 3.x</br>
+**Secrets** - Do not push secrets. Pay attention that secrets are still available in git log, no matter if you deleted them in a later commit.</br>
+**Language** - Although we appreciate any contribution, we prefer Python 3.x</br>
 **Notify content maintainers** - When issuing a pull request, please add an admin **and the original developer** of the tool you are changing  as reviewers.</br>
 **Testing** - Test your stuff and provide a README.</br>
 **Packaging** - Dockerize your code, else supply an installation script or installation instructions for all dependencies.</br>
