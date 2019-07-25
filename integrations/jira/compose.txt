@@ -1,8 +1,8 @@
   bigid-tasks2tickets:
-    image: tals/tasks2jira:1.0.0
+    image: bigexchange/tasks2jira:1.0.0
     links:
       - bigid-ui
-    container_name: bigid-tasks2jira
+    container_name: bigexchange-tasks2jira
     environment:
       - BIGID_API_URL
       - BIGID_TASKS_URL
