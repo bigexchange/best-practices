@@ -36,7 +36,7 @@ except Exception:
     print("Something went wrong. Is BigID up?", sys.exc_info())
 ```
 
-</br>In general, try to follow the pep8 style guide (https://www.python.org/dev/peps/pep-0008/)
+</br>In addition to the above, please try to follow the [pep8 style guide](https://www.python.org/dev/peps/pep-0008/)
 
 </br></br>
 ## Docker Best Practices
@@ -52,10 +52,10 @@ Avoid running as root by adding a USER instruction:
 ```docker
 USER bigid
 ```
-</br>In general, try to follow Docker's best practices (https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+</br>In addition to the above, please try to follow [Docker's best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
 
 </br></br>
-In case you would like to contribute, please [contact us](https://bigid.com/contact/)  and we will grant you with collaborator permissions.</br></br></br>
+In case you would like to contribute, please [contact us](mailto:community@bigid.com?subject=Contribute%20content).</br></br></br>
 
 
 ## Have fun!
