@@ -55,7 +55,7 @@ USER bigid
 </br>In general, try to follow Docker's best practices (https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
 
 </br></br>
-In case you would like to contribute, please [contact us](mailto:community@bigid.com).</br></br></br>
+In case you would like to contribute, please [contact us](mailto:community@bigid.com?subject=contribute%20content).</br></br></br>
 
 
 ## Have fun!
