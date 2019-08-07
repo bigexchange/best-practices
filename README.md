@@ -55,6 +55,7 @@ USER bigid
 </br>In addition to the above, please try to follow [Docker's best practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
 
 </br></br>
+**Please note**: The content in all bigidsecure repostories is community content, thus it is not officially supported by BigID.<br>
 In case you would like to contribute, please [contact us](mailto:community@bigid.com?subject=Contribute%20content).</br></br></br>
 
 
